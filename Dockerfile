@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY backend ./backend
 COPY frontend ./frontend
+COPY claims_pipeline ./claims_pipeline
 
 WORKDIR /app/backend
 EXPOSE 8000

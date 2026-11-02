@@ -49,5 +49,23 @@ services:
       redis:
         condition: service_healthy
 
+  claims-api:
+    image: devops-assignment:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    working_dir: /app
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      MAX_PDF_BYTES: ${MAX_PDF_BYTES:-20971520}
+      MAX_PDF_PAGES: ${MAX_PDF_PAGES:-100}
+      SEGREGATION_BATCH_SIZE: ${SEGREGATION_BATCH_SIZE:-8}
+    command: ["uvicorn", "claims_pipeline.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8001:8000"
+
 volumes:
   redis-data:

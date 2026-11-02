@@ -18,12 +18,15 @@ docker compose up -d
 
 Open <http://localhost:8000>. Enter an email and select **Send notification**. The page calls `POST /notify/` and polls `GET /task_status/{task_id}` until the task completes or fails.
 
+The claim-processing API is available at <http://localhost:8001/docs>. Set `OPENAI_API_KEY` in `.env` before submitting claims. For an API request example and workflow details, see [claims_pipeline/README.md](claims_pipeline/README.md).
+
 Useful commands:
 
 ```sh
 docker compose ps
 docker compose logs -f backend worker
 docker compose logs -f redis
+docker compose logs -f claims-api
 docker compose restart backend worker
 docker compose down
 ```
@@ -31,6 +34,18 @@ docker compose down
 To stop the stack and also remove the local Redis data volume, use `docker compose down -v`. This permanently deletes the local Redis task data.
 
 The `TASK_DURATION_SECONDS` and `LOG_LEVEL` settings are in `.env`. Redis host, port, database, TLS, and password are configurable through environment variables; local Compose sets the Redis hostname to its service name. Do not commit `.env` or put cloud credentials in it.
+
+### Run the claim API without Docker
+
+Install the requirements into a Python environment, set the LLM key, then run:
+
+```sh
+pip install -r requirements.txt
+export OPENAI_API_KEY="your-key"
+uvicorn claims_pipeline.main:app --reload --port 8001
+```
+
+This service uses `POST /api/process` with multipart form fields `claim_id` and `file`. API docs are served at <http://localhost:8001/docs>. The default upload limit is 20 MiB and 100 pages; use `MAX_PDF_BYTES` and `MAX_PDF_PAGES` to adjust these caps. Text-based PDFs are supported directly. Scanned/image-only pages need OCR before upload. Claim contents are sent to the configured OpenAI model, so use only data you are authorized to process and an approved provider/account.
 
 ## AWS deployment
 

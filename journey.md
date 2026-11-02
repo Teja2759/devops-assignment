@@ -23,3 +23,11 @@
 - Docker, Terraform, AWS CLI, and Node.js were unavailable in the implementation environment, so an image build, `terraform validate`, cloud apply, and browser run remain to be performed by the developer.
 - Before real use, add HTTPS with an ACM certificate and custom domain, use private task subnets with suitable VPC endpoints/NAT, review scaling and backups, and assess task-level IAM, alerting, and Redis availability requirements.
 - Cloud resources incur ongoing charges. Follow the teardown steps in `instructions.md` after the assessment, while preserving the Terraform state bucket until state is no longer needed.
+
+## Claim processing assignment
+
+- Added `claims_pipeline` as a separate FastAPI app so it does not change the original notifier API.
+- Uses PyPDF to extract text per page, a structured-output LLM call to classify pages, and LangGraph `Send` routing so only relevant page text reaches each of the ID, discharge summary, and itemized bill agents.
+- The three agent branches join at an aggregator. Bill line amounts are summed in code with decimal arithmetic before returning JSON.
+- Added request limits and rejects malformed, encrypted, and textless PDFs. Scanned documents need OCR before submission; OCR is not bundled.
+- An offline fake-model graph test verifies classification, page isolation, and result aggregation. Real extraction requires an approved `OPENAI_API_KEY` and sends assigned claim page text to the configured OpenAI model.
