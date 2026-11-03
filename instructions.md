@@ -132,7 +132,7 @@ After Terraform outputs `github_actions_role_arn`, add these **repository Action
 - `AWS_REGION`: the Terraform `aws_region` output
 - `AWS_ACCOUNT_ID`: the Terraform `aws_account_id` output
 
-The workflow uses GitHub OIDC, so no long-lived AWS access key is stored in GitHub. It builds an image tagged with the commit SHA, pushes it to ECR, registers updated ECS task definitions, deploys both services, and waits for them to stabilize. A push to `main` triggers deployment; `workflow_dispatch` can trigger it manually.
+The workflow uses GitHub OIDC, so no long-lived AWS access key is stored in GitHub. Pull requests run the test suite but do not deploy. A push to `main` or `devops_project` runs the tests, builds an image tagged with the commit SHA, pushes it to ECR, registers updated ECS task definitions, deploys both services, and waits for them to stabilize. `workflow_dispatch` can also trigger a deployment manually.
 
 If you fork or rename the repository, update `github_repository` in Terraform and apply again. The IAM OIDC trust policy only permits the configured repository and branches.
 

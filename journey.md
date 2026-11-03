@@ -8,6 +8,7 @@
 - Sent worker output to stdout so Docker and CloudWatch can collect logs instead of relying on a container-local file.
 - Used Compose and a local Redis container for developer runs; used ECS Fargate, ElastiCache, ECR, Secrets Manager, and CloudWatch for AWS.
 - Used GitHub's OIDC federation for short-lived deployment credentials rather than storing long-lived AWS access keys.
+- Run the container as a dedicated non-root user and run the offline test suite on pull requests before deployment.
 - Created the Terraform state bucket in a separate bootstrap module because an S3 backend must exist before the application stack can initialize its remote state.
 
 ## Challenges and fixes
@@ -19,8 +20,8 @@
 
 ## Validation and remaining work
 
-- Python syntax checks passed for the changed backend modules, and the Compose file parsed as YAML.
-- Docker, Terraform, AWS CLI, and Node.js were unavailable in the implementation environment, so an image build, `terraform validate`, cloud apply, and browser run remain to be performed by the developer.
+- `docker compose config --quiet` and `docker compose build backend worker claims-api` succeeded. The built image imported the FastAPI app while running as UID 10001, and all four tests passed with `python -m unittest discover -s tests -v`.
+- Terraform, the AWS CLI, and Node.js were unavailable, so Terraform validation, cloud apply, and browser-based end-to-end testing remain to be performed by the developer.
 - Before real use, add HTTPS with an ACM certificate and custom domain, use private task subnets with suitable VPC endpoints/NAT, review scaling and backups, and assess task-level IAM, alerting, and Redis availability requirements.
 - Cloud resources incur ongoing charges. Follow the teardown steps in `instructions.md` after the assessment, while preserving the Terraform state bucket until state is no longer needed.
 

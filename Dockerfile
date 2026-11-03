@@ -13,6 +13,9 @@ COPY backend ./backend
 COPY frontend ./frontend
 COPY claims_pipeline ./claims_pipeline
 
+RUN useradd --uid 10001 --create-home appuser
+USER 10001
+
 WORKDIR /app/backend
 EXPOSE 8000
 
