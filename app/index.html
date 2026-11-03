@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Claim Processing Pipeline</title>
+    <style>
+      body {
+        max-width: 720px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+        color: #172033;
+        font: 16px/1.5 system-ui, sans-serif;
+      }
+      form, .result {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        border: 1px solid #d5dbea;
+        border-radius: 12px;
+      }
+      label { display: grid; gap: .4rem; font-weight: 600; }
+      input, button { font: inherit; padding: .65rem; }
+      button { cursor: pointer; }
+      button:disabled { cursor: wait; }
+      pre {
+        overflow: auto;
+        padding: 1rem;
+        border-radius: 8px;
+        background: #f3f5f9;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      [hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <h1>Claim Processing Pipeline</h1>
+    <p>Select a claim PDF and enter its claim ID to classify the pages and extract claim data.</p>
+    <p>
+      If the LLM service is unavailable, the pipeline uses local text-pattern fallbacks.
+      Those results are labeled in the response and may be incomplete.
+    </p>
+    <form id="claim-form">
+      <label for="claim-id">Claim ID</label>
+      <input id="claim-id" name="claim_id" type="text" maxlength="128" required>
+      <label for="claim-file">Claim PDF</label>
+      <input id="claim-file" name="file" type="file" accept=".pdf,application/pdf" required>
+      <button id="submit-button" type="submit">Upload and process PDF</button>
+      <p id="status" role="status" aria-live="polite"></p>
+    </form>
+    <section id="result" class="result" aria-labelledby="result-title" hidden>
+      <h2 id="result-title">Processing result</h2>
+      <pre id="result-json"></pre>
+    </section>
+    <script>
+      const form = document.querySelector("#claim-form");
+      const button = document.querySelector("#submit-button");
+      const status = document.querySelector("#status");
+      const result = document.querySelector("#result");
+      const resultJson = document.querySelector("#result-json");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        button.disabled = true;
+        status.textContent = "Uploading and processing PDF…";
+        result.hidden = true;
+
+        try {
+          const response = await fetch("/api/process", {
+            method: "POST",
+            body: new FormData(form),
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body.detail || `Request failed (${response.status})`);
+          }
+          resultJson.textContent = JSON.stringify(body, null, 2);
+          result.hidden = false;
+          status.textContent = "Processing complete.";
+        } catch (error) {
+          status.textContent = `Could not process the PDF: ${error.message}`;
+        } finally {
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
